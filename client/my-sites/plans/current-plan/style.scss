@@ -27,6 +27,23 @@
 		border: 1px solid lighten( $gray, 30% );
 		text-align: left;
 	}
+
+	@media ( min-width: 1041px ) and ( max-width: 1095px ) {
+		height: 330px;
+	}
+
+	@media ( min-width: 1096px ) and ( max-width: 1123px ) {
+		height: 300px;
+	}
+
+	@media ( min-width: 1124px ) and ( max-width: 1217px ) {
+		height: 250px;
+	}
+
+	@media ( min-width: 1218px ) {
+		height: 210px;
+	}
+
 }
 
 .current-plan__header-icon {
