@@ -64,7 +64,8 @@ const Signup = React.createClass( {
 			loadingScreenStartTime: undefined,
 			resumingStep: undefined,
 			user: user.get(),
-			loginHandler: null
+			loginHandler: null,
+			hasCartItems: false,
 		};
 	},
 
@@ -75,6 +76,10 @@ const Signup = React.createClass( {
 			startLoadingScreen = waitingForServer && ! this.state.loadingScreenStartTime;
 
 		this.setState( { progress: newProgress } );
+
+		if ( this.dependenciesContainCartItem( this.props.signupDependencies ) ) {
+			this.setState( { hasCartItems: true } );
+		}
 
 		if ( this.isEveryStepSubmitted() ) {
 			this.goToFirstInvalidStep();
@@ -328,7 +333,7 @@ const Signup = React.createClass( {
 				{ this.localeSuggestions() }
 				{
 					this.state.loadingScreenStartTime ?
-					<SignupProcessingScreen hasCartItems={ this.dependenciesContainCartItem( this.props.signupDependencies ) } steps={ this.state.progress } user={ this.state.user } loginHandler={ this.state.loginHandler }/> :
+					<SignupProcessingScreen hasCartItems={ this.state.hasCartItems } steps={ this.state.progress } user={ this.state.user } loginHandler={ this.state.loginHandler }/> :
 					<CurrentComponent
 						path={ this.props.path }
 						step={ currentStepProgress }
@@ -350,7 +355,7 @@ const Signup = React.createClass( {
 	},
 
 	dependenciesContainCartItem( dependencies ) {
-		return dependencies.cartItem || dependencies.domainItem || dependencies.themeItem;
+		return dependencies && ( dependencies.cartItem || dependencies.domainItem || dependencies.themeItem );
 	},
 
 	render() {
