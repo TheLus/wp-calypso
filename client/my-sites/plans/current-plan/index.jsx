@@ -72,7 +72,7 @@ class CurrentPlan extends Component {
 
 		return (
 			<Main className="current-plan" wideLayout>
-				<QuerySites siteId={ selectedSiteId } />
+				{ selectedSiteId && <QuerySites siteId={ selectedSiteId } /> }
 				<QuerySitePlans siteId={ selectedSiteId } />
 
 				<PlansNavigation
