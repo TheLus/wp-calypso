@@ -32,6 +32,7 @@ const CreditCardPage = React.createClass( {
 		apiParams: PropTypes.object,
 		initialValues: PropTypes.object,
 		recordFormSubmitEvent: PropTypes.func.isRequired,
+		saveStoredCard: PropTypes.func,
 		successCallback: PropTypes.func.isRequired
 	},
 
@@ -145,7 +146,7 @@ const CreditCardPage = React.createClass( {
 	saveCreditCard() {
 		const cardDetails = this.getCardDetails();
 
-		createPaygateToken( 'card_update', cardDetails, ( paygateError, token ) => {
+		createPaygateToken( 'card_update', cardDetails, ( paygateError, paygateToken ) => {
 			if ( ! this._mounted ) {
 				return;
 			}
@@ -156,35 +157,51 @@ const CreditCardPage = React.createClass( {
 				return;
 			}
 
-			const apiParams = this.getParamsForApi( cardDetails, token, this.props.apiParams );
+			if ( this.props.saveStoredCard ) {
+				this.props.saveStoredCard( paygateToken ).then( () => {
+					notices.success( this.translate( 'Card added successfully' ), {
+						persistent: true
+					} );
 
-			wpcom.updateCreditCard( apiParams, ( apiError, response ) => {
-				if ( apiError ) {
+					this.props.successCallback();
+				} ).catch( ( { message } ) => {
 					if ( this._mounted ) {
 						this.setState( { formSubmitting: false } );
 					}
-					notices.error( apiError.message );
-					return;
-				}
 
-				if ( response.error ) {
-					if ( this._mounted ) {
-						this.setState( { formSubmitting: false } );
-					}
-					notices.error( response.error );
-					return;
-				}
-
-				notices.success( response.success, {
-					persistent: true
+					notices.error( message );
 				} );
+			} else {
+				const apiParams = this.getParamsForApi( cardDetails, paygateToken, this.props.apiParams );
 
-				this.props.successCallback();
-			} );
+				wpcom.updateCreditCard( apiParams, ( apiError, response ) => {
+					if ( apiError ) {
+						if ( this._mounted ) {
+							this.setState( { formSubmitting: false } );
+						}
+						notices.error( apiError.message );
+						return;
+					}
+
+					if ( response.error ) {
+						if ( this._mounted ) {
+							this.setState( { formSubmitting: false } );
+						}
+						notices.error( response.error );
+						return;
+					}
+
+					notices.success( response.success, {
+						persistent: true
+					} );
+
+					this.props.successCallback();
+				} );
+			}
 		} );
 	},
 
-	getParamsForApi( cardDetails, token, extraParams = {} ) {
+	getParamsForApi( cardDetails, paygateToken, extraParams = {} ) {
 		return {
 			...extraParams,
 			country: cardDetails.country,
@@ -192,7 +209,7 @@ const CreditCardPage = React.createClass( {
 			month: cardDetails[ 'expiration-date' ].split( '/' )[ 0 ],
 			year: cardDetails[ 'expiration-date' ].split( '/' )[ 1 ],
 			name: cardDetails.name,
-			paygateToken: token
+			paygateToken
 		};
 	},
 
@@ -236,9 +253,10 @@ const CreditCardPage = React.createClass( {
 								'and {{managePurchasesSupportPage}}how to cancel{{/managePurchasesSupportPage}}.',
 								{
 									components: {
-										tosLink: <a href="//wordpress.com/tos/" target="_blank"/>,
-										autoRenewalSupportPage: <a href={ support.AUTO_RENEWAL } target="_blank"/>,
-										managePurchasesSupportPage: <a href={ support.MANAGE_PURCHASES } target="_blank"/>
+										tosLink: <a href="//wordpress.com/tos/" target="_blank" />,
+										autoRenewalSupportPage: <a href={ support.AUTO_RENEWAL } target="_blank" />,
+										managePurchasesSupportPage: <a href={ support.MANAGE_PURCHASES }
+											target="_blank" />
 									}
 								}
 							) }
